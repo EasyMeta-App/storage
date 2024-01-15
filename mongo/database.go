@@ -14,7 +14,7 @@ type Database struct {
 
 // CollectionNames returns the collection names present in database.
 func (d *Database) CollectionNames() ([]string, error) {
-	return d.database.ListCollectionNames(context.TODO(), options.ListCollectionsOptions{})
+	return d.database.ListCollectionNames(context.Background(), options.ListCollectionsOptions{})
 }
 
 // C returns collection.
