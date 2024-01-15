@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"time"
 
 	"github.com/EasyMeta-App/helper"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -44,7 +45,36 @@ func New(uri ...string) *Session {
 	if err := session.Connect(); err != nil {
 		log.Panic(err)
 	}
+	// 检查，如果失败，则重试
+	go func(session *Session) {
+		ticker := time.NewTicker(10 * time.Second)
+		for ; true; <-ticker.C {
+			if err := session.Ping(); err != nil {
+				// 失败，重试
+				if err := session.Connect(); err != nil {
+					log.Println(err)
+				}
+			}
+		}
+	}(session)
+
 	return session
+}
+
+var instance *Session = nil
+
+// single mode for session
+func Get(uri ...string) *Session {
+	if instance != nil {
+		return instance
+	}
+	instance = New(uri...)
+	return instance
+}
+
+// C Collection alias
+func C(collection string) *Collection {
+	return Get().Collection(collection)
 }
 
 // decode
