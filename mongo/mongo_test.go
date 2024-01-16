@@ -72,25 +72,25 @@ func TestMain(t *testing.T) {
 		log.Println(r.Name)
 	}
 
-	// Update
-	if _, err := session.C(Table).Update(bson.D{{"name", "name1"}}, bson.M{"$set": bson.M{"name": "name01"}}); err != nil {
+	// Update one
+	if _, err := session.C(Table).Where(bson.D{{"name", "name1"}}).UpdateOne(bson.M{"$set": bson.M{"name": "name01"}}); err != nil {
 		log.Println(err)
 	}
 
 	// Update update all
-	info, err := session.C(Table).UpdateAll(bson.D{{"name", "name01"}}, bson.M{"$set": bson.M{"name": "name"}})
+	info, err := session.C(Table).Where(bson.D{{"name", "name01"}}).Update(bson.M{"$set": bson.M{"name": "name"}})
 	if err != nil {
 		log.Println(err)
 	}
 	log.Printf("%+v", info)
 
-	// Remove
-	if err := session.C(Table).Remove(bson.D{{"name", "name"}}); err != nil {
+	// Remove one
+	if err := session.C(Table).Where(bson.D{{"name", "name"}}).RemoveOne(); err != nil {
 		log.Println(err)
 	}
 
 	// RemoveAll
-	if err := session.C(Table).RemoveAll(bson.D{{"name", "name"}}); err != nil {
+	if err := session.C(Table).Where(bson.D{{"name", "name"}}).Remove(); err != nil {
 		log.Println(err)
 	}
 
@@ -113,6 +113,6 @@ func TestMain(t *testing.T) {
 	}
 
 	// Count
-	count := session.C(Table).Count(bson.D{{"name", "name"}})
+	count := session.C(Table).Where(bson.D{{"name", "name"}}).Count()
 	log.Println(count)
 }

@@ -2,10 +2,12 @@ package mongo
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -125,6 +127,66 @@ func (s *Session) FetchAll(results interface{}) error {
 	return decode(ctx, cur, results)
 }
 
+// Update by id
+func (s *Session) UpdateID(id primitive.ObjectID, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
+	return s.collection.UpdateOne(context.Background(), bson.D{{"_id", id}}, update, opts...)
+}
+
+// Update one
+func (s *Session) UpdateOne(update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
+	if s.filter == nil {
+		s.filter = bson.D{}
+	}
+	return s.collection.UpdateOne(context.Background(), s.filter, update, opts...)
+}
+
+// Update all
+func (s *Session) Update(update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
+	if s.filter == nil {
+		s.filter = bson.D{}
+	}
+	return s.collection.UpdateMany(context.Background(), s.filter, update, opts...)
+}
+
+// Remove by ID
+func (s *Session) RemoveID(id primitive.ObjectID, opts ...*options.DeleteOptions) error {
+	s.filter = bson.D{{"_id", id}}
+	return s.Remove(opts...)
+}
+
+// Remove
+func (s *Session) Remove(opts ...*options.DeleteOptions) error {
+	if s.filter == nil {
+		return errors.New("filter is nil")
+	}
+	if _, err := s.collection.DeleteMany(context.Background(), s.filter, opts...); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Remove one
+func (s *Session) RemoveOne(opts ...*options.DeleteOptions) error {
+	if s.filter == nil {
+		return errors.New("filter is nil")
+	}
+	if _, err := s.collection.DeleteOne(context.Background(), s.filter, opts...); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Count gets the number of documents matching the filter.
+func (s *Session) Count(opts ...*options.CountOptions) int64 {
+	if s.filter == nil {
+		s.filter = bson.D{}
+	}
+	if v, err := s.collection.CountDocuments(context.Background(), s.filter, opts...); err == nil {
+		return v
+	}
+	return 0
+}
+
 // Pagination pagination
 func (s *Session) Pagination(page, limit int, results interface{}) (int64, error) {
 	fo := options.MergeFindOptions(s.findOpts...)
@@ -136,7 +198,7 @@ func (s *Session) Pagination(page, limit int, results interface{}) (int64, error
 		fo.SetNoCursorTimeout(true)
 	}
 	s.SetOpts(fo)
-	return s.table.Count(s.filter), s.FetchAll(results)
+	return s.table.Where(s.filter).Count(), s.FetchAll(results)
 }
 
 // Run runs the given model.

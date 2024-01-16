@@ -102,67 +102,6 @@ func (c *Collection) InsertAll(docs []interface{}, opts ...*options.InsertManyOp
 	return c.collection.InsertMany(context.Background(), docs, opts...)
 }
 
-// UpdateWithResult updates a single document in the collection and returns update result.
-func (c *Collection) Update(filter bson.D, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
-	if filter == nil {
-		filter = bson.D{}
-	}
-	return c.collection.UpdateOne(context.Background(), filter, update, opts...)
-}
-
-// UpdateByID updates a single document in the collection by id
-func (c *Collection) UpdateByID(id primitive.ObjectID, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
-	return c.Update(bson.D{{"_id", id}}, update, opts...)
-}
-
-// UpdateAll updates multiple documents in the collection.
-func (c *Collection) UpdateAll(filter bson.D, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
-	if filter == nil {
-		filter = bson.D{}
-	}
-
-	return c.collection.UpdateMany(context.Background(), filter, update, opts...)
-}
-
-// Remove deletes a single document from the collection.
-func (c *Collection) Remove(filter bson.D, opts ...*options.DeleteOptions) error {
-	if filter == nil {
-		filter = bson.D{}
-	}
-	if _, err := c.collection.DeleteOne(context.Background(), filter, opts...); err != nil {
-		return err
-	}
-	return nil
-}
-
-// RemoveID deletes a single document from the collection by id.
-func (c *Collection) RemoveID(id primitive.ObjectID, opts ...*options.DeleteOptions) error {
-	return c.Remove(bson.D{{"_id", id}}, opts...)
-}
-
-// RemoveAll deletes multiple documents from the collection.
-func (c *Collection) RemoveAll(filter bson.D, opts ...*options.DeleteOptions) error {
-	if filter == nil {
-		filter = bson.D{}
-	}
-
-	if _, err := c.collection.DeleteMany(context.Background(), filter, opts...); err != nil {
-		return err
-	}
-	return nil
-}
-
-// Count gets the number of documents matching the filter.
-func (c *Collection) Count(filter bson.D, opts ...*options.CountOptions) int64 {
-	if filter == nil {
-		filter = bson.D{}
-	}
-	if v, err := c.collection.CountDocuments(context.Background(), filter, opts...); err == nil {
-		return v
-	}
-	return 0
-}
-
 // Aggregate performs an aggregation pipeline.
 func (c *Collection) Aggregate(pipeline interface{}, results interface{}, opts ...*options.AggregateOptions) error {
 	// 设置超时时间
